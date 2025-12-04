@@ -14,26 +14,7 @@
 - **フレームワーク**: React 19
 - **ビルドツール**: Vite 6
 - **言語**: JavaScript (JSX)
-
-## セットアップ
-
-```bash
-# 依存関係のインストール
-npm install
-
-# 開発サーバーの起動
-npm run dev
-
-# 本番ビルド
-npm run build
-
-# プレビュー
-npm run preview
-```
-
-## 開発
-
-開発サーバーは `http://localhost:5173` で起動します。
+- **API**: CloudFront + S3
 
 ## ライセンス
 

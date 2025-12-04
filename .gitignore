@@ -14,6 +14,7 @@ dist-ssr
 
 # Local configuration (for eholo.acti-dev.net)
 vite.config.local.js
+.cert/
 
 # Editor directories and files
 .vscode/*

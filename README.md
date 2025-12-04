@@ -1,16 +1,41 @@
-# React + Vite
+# 🎵 天音かなた 歌アーカイブ | Kanata Songs
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ホロライブ4期生 天音かなたの3D Live・歌枠・MVをまとめたウェブサイトです。
 
-Currently, two official plugins are available:
+## 特徴
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🎤 3D Live、歌枠、MVをカテゴリー別に閲覧
+- 🔍 フィルター機能で簡単に検索
+- 📱 レスポンシブデザイン対応
+- ⚡ Vite + Reactによる高速な動作
 
-## React Compiler
+## 技術スタック
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **フレームワーク**: React 19
+- **ビルドツール**: Vite 6
+- **言語**: JavaScript (JSX)
 
-## Expanding the ESLint configuration
+## セットアップ
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバーの起動
+npm run dev
+
+# 本番ビルド
+npm run build
+
+# プレビュー
+npm run preview
+```
+
+## 開発
+
+開発サーバーは `http://localhost:5173` で起動します。
+
+## ライセンス
+
+このプロジェクトはファンメイドのアーカイブサイトです。
+すべてのコンテンツの権利は元の著作権者に帰属します。

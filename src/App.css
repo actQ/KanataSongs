@@ -133,6 +133,44 @@ header p {
   padding: 2rem;
 }
 
+.copyright-notice {
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  margin-top: 4rem;
+  padding: 2rem;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.copyright-notice h2 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.copyright-notice p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.copyright-notice strong {
+  color: #8CD6E0;
+  font-weight: 600;
+}
+
+.copyright-notice a {
+  color: #8CD6E0;
+  text-decoration: none;
+  border-bottom: 1px solid #8CD6E0;
+  transition: opacity 0.3s ease;
+}
+
+.copyright-notice a:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;

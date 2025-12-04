@@ -142,24 +142,53 @@ function App() {
       {loading ? (
         <div className="loading">読み込み中...</div>
       ) : (
-        <div className="video-grid">
-          {filteredVideos.map(video => (
-            <div key={video.id} className="video-card">
-              <a href={video.url} target="_blank" rel="noopener noreferrer">
-                <img 
-                  src={`https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`} 
-                  alt={video.title} 
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/320x180?text=No+Image'}
-                />
-                <div className="video-info">
-                  <h3>{video.title}</h3>
-                  <p className="video-date">{video.published_at?.split('T')[0]}</p>
-                  <p className="video-songs">{video.songCount} 曲</p>
-                </div>
+        <>
+          <div className="video-grid">
+            {filteredVideos.map(video => (
+              <div key={video.id} className="video-card">
+                <a href={video.url} target="_blank" rel="noopener noreferrer">
+                  <img 
+                    src={`https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`} 
+                    alt={video.title} 
+                    onError={(e) => e.target.src = 'https://via.placeholder.com/320x180?text=No+Image'}
+                  />
+                  <div className="video-info">
+                    <h3>{video.title}</h3>
+                    <p className="video-date">{video.published_at?.split('T')[0]}</p>
+                    <p className="video-songs">{video.songCount} 曲</p>
+                  </div>
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <footer className="copyright-notice">
+            <h2>このサイトについて</h2>
+            <p>
+              このサイトは <strong>ホロライブ</strong> 所属の 
+              <strong>天音かなた</strong> さんの動画をまとめた非公式のファンサイトです。
+            </p>
+            <p>
+              掲載されている動画、楽曲等のすべてのコンテンツは、
+              それぞれの著作権者に帰属しています。
+            </p>
+            <p>
+              本サイトは営利目的ではなく、天音かなたさんが残した歌の情報提供を目的としています。
+            </p>
+            <p>
+              本サイトはYouTubeの動画をリンク形式で紹介しており、
+              曲名・動画リンク・再生位置などのメタデータのみで機能実現しています。
+            </p>
+            <p>
+              メタデータはすべて手動で作成しており、YouTubeへのスクレイピングや動画データの保存は一切行っていません。
+            </p>
+            <p>
+              <a href="https://twitter.com/act_q" target="_blank" rel="noopener noreferrer">
+                連絡先 (Twitter: @act_q)
               </a>
-            </div>
-          ))}
-        </div>
+            </p>
+          </footer>
+        </>
       )}
     </div>
   )

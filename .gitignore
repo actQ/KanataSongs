@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local configuration (for eholo.acti-dev.net)
+vite.config.local.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -282,7 +282,7 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>🎵 天界学園 音楽資料室 💫</h1>
+        <h1>天界学園 音楽資料室💫</h1>
         <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
 

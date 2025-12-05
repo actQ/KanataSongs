@@ -6,7 +6,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(180deg, #4A8FB8 0%, #0D1B2E 100%);
   min-height: 100vh;
 }
 
@@ -33,11 +33,64 @@ header p {
   opacity: 0.9;
 }
 
-.filter-nav {
+/* View Mode Selector */
+.view-mode-selector {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.view-mode-btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.view-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.view-mode-btn.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Filter Navigation - Two Axes */
+.filter-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filter-group h3 {
+  color: white;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.filter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
@@ -48,7 +101,7 @@ header p {
   color: white;
   border-radius: 25px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
@@ -63,6 +116,40 @@ header p {
   background: white;
   color: #667eea;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Expand/Collapse All Controls */
+.expand-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.expand-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.expand-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.random-mode-placeholder {
+  text-align: center;
+  color: white;
+  font-size: 1.5rem;
+  margin-top: 3rem;
+  padding: 2rem;
 }
 
 .video-grid {
@@ -88,14 +175,17 @@ header p {
 .video-card a {
   text-decoration: none;
   color: inherit;
-  display: block;
 }
 
-.video-card img {
+.video-thumb img {
   width: 100%;
   height: 180px;
   object-fit: cover;
   display: block;
+}
+
+.video-header {
+  cursor: pointer;
 }
 
 .video-info {
@@ -113,6 +203,10 @@ header p {
   overflow: hidden;
 }
 
+.video-info h3 a {
+  color: inherit;
+}
+
 .video-date {
   color: #666;
   font-size: 0.9rem;
@@ -123,6 +217,74 @@ header p {
   font-size: 0.85rem;
   font-weight: 600;
   margin-top: 0.25rem;
+}
+
+.song-area {
+  margin-top: 0.6rem;
+  min-height: 52px; /* 1曲表示時と同じ高さを確保 */
+}
+
+.song-placeholder {
+  height: 52px; /* 1曲分の高さを確保してカード高さを揃える */
+}
+
+.song-list {
+  border-top: 1px solid #eee;
+  padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.song-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.song-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.song-title a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.song-singers {
+  color: #666;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.singer-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  background-color: #b0b0b0;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.song-toggle {
+  margin-top: 0.5rem;
+  color: #667eea;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.song-toggle:hover {
+  text-decoration: underline;
 }
 
 .loading {

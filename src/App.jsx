@@ -265,11 +265,25 @@ function App() {
     return m
   })
 
+  // グラデーション設定を動的に変更
+  useEffect(() => {
+    const cardCount = filteredVideos.length
+    let gradient
+    if (cardCount < 6) {
+      // 6:2:2 - ライトブルーを少し多めに
+      gradient = 'linear-gradient(180deg, #9BCBDF 0%, #9BCBDF 60%, #0B01DF 80%, #060519 100%)'
+    } else {
+      // 1:4:3 - 通常のグラデーション
+      gradient = 'linear-gradient(180deg, #9BCBDF 0%, #9BCBDF 25%, #0B01DF 65%, #060519 100%)'
+    }
+    document.body.style.background = gradient
+  }, [filteredVideos])
+
   return (
     <div className="container">
       <header>
-        <h1>🎵 天界学園 音楽資料室</h1>
-        <p>ホロライブ4期生 天音かなたの3D Live・歌枠・MVまとめ</p>
+        <h1>🎵 天界学園 音楽資料室 💫</h1>
+        <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
 
       {/* View Mode Selection */}
@@ -464,7 +478,7 @@ function App() {
             <h2>このサイトについて</h2>
             <p>
               このサイトは <strong>ホロライブ</strong> 所属の 
-              <strong>天音かなた</strong> の 3D Live・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
+              <strong>天音かなた</strong> の 3Dライブ・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
             </p>
             <p>
               掲載されている動画、楽曲等のすべてのコンテンツは、

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
-const API_BASE = 'https://d34uks5q5372sl.cloudfront.net'
+// Allow overriding API base per environment (dev:local uses /dev)
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://d34uks5q5372sl.cloudfront.net'
 
 function App() {
   const [viewMode, setViewMode] = useState('list') // 'list' or 'random'

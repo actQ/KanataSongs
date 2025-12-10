@@ -67,6 +67,95 @@ header p {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Info Icon */
+.info-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0066cc;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.info-icon:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.1);
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  color: #333;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  min-width: 320px;
+  max-width: 400px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  white-space: normal;
+}
+
+.info-icon:hover .info-tooltip,
+.info-icon:active .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-5px);
+}
+
+.info-tooltip::before {
+  display: none;
+}
+
+.info-tooltip strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #0066cc;
+  font-size: 1rem;
+  border-bottom: 2px solid #0066cc;
+  padding-bottom: 0.5rem;
+}
+
+.info-tooltip ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.info-tooltip li {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.info-tooltip li:last-child {
+  margin-bottom: 0;
+}
+
+.info-tooltip li strong {
+  display: inline;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}
+
 /* Filter Navigation - Two Axes */
 .filter-nav {
   display: flex;
@@ -124,6 +213,7 @@ header p {
 .expand-controls {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
@@ -138,6 +228,9 @@ header p {
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  min-width: 100px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .expand-btn:hover {
@@ -166,7 +259,7 @@ header p {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, max-height 0.4s ease;
 }
 
 .video-card:hover {
@@ -201,6 +294,7 @@ header p {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -224,6 +318,16 @@ header p {
 .song-area {
   margin-top: 0.6rem;
   min-height: 52px; /* 1曲表示時と同じ高さを確保 */
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.video-card.collapsed .song-area {
+  max-height: 52px;
+}
+
+.video-card.expanded .song-area {
+  max-height: 2000px; /* 十分大きな値 */
 }
 
 .song-placeholder {
@@ -236,6 +340,18 @@ header p {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  animation: slideDown 0.4s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .song-item {
@@ -351,5 +467,29 @@ header p {
   .video-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .info-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+
+  .info-tooltip {
+    min-width: 280px;
+    max-width: calc(100vw - 2rem);
+    right: 0;
+    left: auto;
+    bottom: auto;
+    top: calc(100% + 10px);
+  }
+
+  .info-icon:hover .info-tooltip,
+  .info-icon:active .info-tooltip {
+    transform: translateY(5px);
+  }
+
+  .info-tooltip::before {
+    display: none;
   }
 }

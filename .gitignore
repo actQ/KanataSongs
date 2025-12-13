@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-# Local configuration (for eholo.acti-dev.net)
+# Local configuration
 vite.config.local.js
 .cert/
 LOCAL_SETUP2.md

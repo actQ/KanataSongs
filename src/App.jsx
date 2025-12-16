@@ -720,6 +720,7 @@ function App() {
           isExpanded={isExpanded}
           toggleCard={toggleCard}
           buildSongUrl={buildSongUrl}
+          showFooter={false}
         />
       ) : (
         <ShuffleView
@@ -745,6 +746,34 @@ function App() {
           getVisiblePlaylist={getVisiblePlaylist}
         />
       )}
+
+      {/* Common Footer */}
+      <footer className="copyright-notice">
+        <h2>このサイトについて</h2>
+        <p>
+          このサイトは <strong>ホロライブ</strong> 所属の 
+          <strong>天音かなた</strong> の 3Dライブ・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
+        </p>
+        <p>
+          掲載されている動画、楽曲等のすべてのコンテンツは、
+          それぞれの著作権者に帰属しています。
+        </p>
+        <p>
+          本サイトは営利目的ではなく、天音かなたの歌活動の情報提供を目的としています。
+        </p>
+        <p>
+          本サイトはYouTubeの動画をリンク形式で紹介しており、
+          曲名・動画リンク・再生位置などのメタデータのみで機能実現しています。
+        </p>
+        <p>
+          メタデータはすべて人力で作成しており、YouTubeへのスクレイピングや動画データの保存は一切行っていません。
+        </p>
+        <p>
+          <a href="https://twitter.com/act_q" target="_blank" rel="noopener noreferrer">
+            連絡先 ( Twitter: @act_Q )
+          </a>
+        </p>
+      </footer>
     </div>
   )
 }

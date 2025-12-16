@@ -11,7 +11,8 @@ function ListView({
   collapseAll,
   isExpanded,
   toggleCard,
-  buildSongUrl
+  buildSongUrl,
+  showFooter = true
 }) {
   return (
     <>
@@ -197,7 +198,7 @@ function ListView({
             })}
           </div>
 
-          <footer className="copyright-notice">
+          <footer className="copyright-notice" style={{ display: showFooter ? 'block' : 'none' }}>
             <h2>このサイトについて</h2>
             <p>
               このサイトは <strong>ホロライブ</strong> 所属の 

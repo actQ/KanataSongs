@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import ListView from './components/ListView'
+import ShuffleView from './components/ShuffleView'
 import './App.css'
 
 // Allow overriding API base per environment (dev:local uses /dev)
@@ -14,6 +16,16 @@ function App() {
   const [singerMap, setSingerMap] = useState({}) // singer_id -> name
   const [singerColors, setSingerColors] = useState({}) // singer_id -> color
   const [expandedCards, setExpandedCards] = useState(new Set())
+
+  // シャッフル再生用の状態
+  const [shuffleMovieTypes, setShuffleMovieTypes] = useState(new Set(['live', 'mv', 'streaming', 'other']))
+  const [shuffleSingerTypes, setShuffleSingerTypes] = useState(new Set(['solo', 'unit']))
+  const [playlist, setPlaylist] = useState([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [playerDuration, setPlayerDuration] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const playerRef = useRef(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -199,6 +211,313 @@ function App() {
     setExpandedCards(new Set())
   }
 
+  // シャッフル再生用: フィルタリングされた全楽曲を取得
+  const getFilteredSongsForShuffle = () => {
+    const allSongs = []
+    
+    songs.forEach(song => {
+      const movie = getMovieById(song.movie_id)
+      if (!movie) return
+
+      const movieTypeValue = getMovieType(movie.type)
+      const singerTypeValue = getSingerType(song.singer_ids)
+
+      // フィルタ条件チェック
+      if (!shuffleMovieTypes.has(movieTypeValue)) return
+      if (!shuffleSingerTypes.has(singerTypeValue)) return
+
+      allSongs.push({
+        id: song.id,
+        title: song.title,
+        video_id: movie.video_id,
+        video_title: movie.title,
+        start: parseTimeToSeconds(song.start_sec ?? song.start ?? song.start_time ?? song.time ?? song.offset) || 0,
+        end: parseTimeToSeconds(song.end_sec ?? song.end ?? song.end_time) || null,
+        singers: resolveSingerNames(song.singer_ids, song.singers, song.info),
+        movie_type: movieTypeValue,
+        singer_type: singerTypeValue
+      })
+    })
+
+    return allSongs
+  }
+
+  // 配列をシャッフル
+  const shuffleArray = (array) => {
+    const shuffled = [...array]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+  }
+
+  // プレイリストを生成（シャッフル）
+  const generatePlaylist = () => {
+    const filteredSongs = getFilteredSongsForShuffle()
+    if (filteredSongs.length === 0) {
+      setPlaylist([])
+      setCurrentIndex(0)
+      setPlayerDuration(0)
+      setCurrentTime(0)
+      return
+    }
+    const shuffled = shuffleArray(filteredSongs)
+    setPlaylist(shuffled)
+    setCurrentIndex(0)
+    setCurrentTime(0)
+    setPlayerDuration(0)
+  }
+
+  // シャッフル再生モードに切り替えたときはプレイリストをクリア
+  useEffect(() => {
+    if (viewMode === 'random') {
+      setPlaylist([])
+      setCurrentIndex(0)
+      setCurrentTime(0)
+      setPlayerDuration(0)
+      playerRef.current = null
+    }
+  }, [viewMode])
+
+  // 次の曲へ
+  const goToNextSong = () => {
+    if (currentIndex < playlist.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+      setCurrentTime(0)
+      setPlayerDuration(0)
+    }
+  }
+
+  // 前の曲へ
+  const goToPrevSong = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1)
+      setCurrentTime(0)
+      setPlayerDuration(0)
+    }
+  }
+
+  // 特定の曲へジャンプ
+  const goToSong = (index) => {
+    if (index >= 0 && index < playlist.length) {
+      setCurrentIndex(index)
+      setCurrentTime(0)
+      setPlayerDuration(0)
+    }
+  }
+
+  // YouTubeプレーヤーの準備完了時
+  const onPlayerReady = (event) => {
+    const currentSong = playlist[currentIndex]
+    if (!currentSong) return
+
+    // iframe が DOM に接続されているか確認し、別動画のイベントは無視
+    const iframe = event?.target?.getIframe?.()
+    if (!iframe || !iframe.isConnected) return
+    const data = event?.target?.getVideoData?.()
+    if (data && data.video_id && data.video_id !== currentSong.video_id) return
+
+    playerRef.current = event.target
+    // ShuffleView用にグローバル参照も設定
+    window.__shuffleViewPlayerRef = playerRef
+    
+    if (typeof event.target.getDuration === 'function') {
+      const dur = event.target.getDuration()
+      if (Number.isFinite(dur)) setPlayerDuration(dur)
+    }
+    if (currentSong.start > 0) {
+      event.target.seekTo(currentSong.start, true)
+    }
+  }
+
+  // YouTubeプレーヤーの状態変化時
+  const onPlayerStateChange = (event) => {
+    const currentSong = playlist[currentIndex]
+    if (!currentSong) return
+
+    // 別動画からのイベントは無視
+    const data = event?.target?.getVideoData?.()
+    if (data && data.video_id && data.video_id !== currentSong.video_id) return
+
+    const playerState = event.data
+    if (playerState === window.YT?.PlayerState?.PLAYING) {
+      setIsPlaying(true)
+    } else if (playerState === window.YT?.PlayerState?.PAUSED) {
+      setIsPlaying(false)
+    } else if (playerState === window.YT?.PlayerState?.ENDED) {
+      setIsPlaying(false)
+      goToNextSong()
+    }
+  }
+
+  // 再生/一時停止を切り替え
+  const togglePlayPause = () => {
+    if (!playerRef.current) return
+    
+    if (isPlaying) {
+      if (typeof playerRef.current.pauseVideo === 'function') {
+        playerRef.current.pauseVideo()
+        setIsPlaying(false)
+      }
+    } else {
+      if (typeof playerRef.current.playVideo === 'function') {
+        playerRef.current.playVideo()
+        setIsPlaying(true)
+      }
+    }
+  }
+
+  // 曲が切り替わるたびにプレイヤー参照をリセット（次のonReadyまでnull）
+  useEffect(() => {
+    if (viewMode !== 'random') return
+    playerRef.current = null
+  }, [currentIndex, viewMode])
+
+  // 再生時刻の更新（定期的に呼び出す）
+  useEffect(() => {
+    if (viewMode !== 'random' || playlist.length === 0) return
+
+    const interval = setInterval(() => {
+      const player = playerRef.current
+      if (!player) return
+
+      if (typeof player.getCurrentTime === 'function') {
+        const time = player.getCurrentTime()
+        setCurrentTime(time)
+
+        // 終了時刻チェック
+        const currentSong = playlist[currentIndex]
+        if (currentSong && currentSong.end && time >= currentSong.end) {
+          goToNextSong()
+        }
+      }
+
+      if (typeof player.getDuration === 'function') {
+        const dur = player.getDuration()
+        if (Number.isFinite(dur)) {
+          setPlayerDuration(dur)
+        }
+      }
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [viewMode, currentIndex, playlist])
+
+  // 動画が変わったときに開始位置にシーク
+  useEffect(() => {
+    if (viewMode === 'random' && playerRef.current && playlist[currentIndex]) {
+      const currentSong = playlist[currentIndex]
+      if (currentSong.start > 0) {
+        playerRef.current.seekTo(currentSong.start, true)
+      }
+    }
+  }, [currentIndex, viewMode, playlist])
+
+  // プレイヤー破棄: プレイリストが空になったら古いプレイヤー参照を破棄
+  useEffect(() => {
+    if (viewMode !== 'random') return
+    if (playlist.length === 0 && playerRef.current) {
+      try {
+        const iframe = playerRef.current.getIframe?.()
+        if (iframe && iframe.isConnected && typeof playerRef.current.destroy === 'function') {
+          playerRef.current.destroy()
+        }
+      } catch (_) {
+        // noop
+      }
+      playerRef.current = null
+    }
+  }, [viewMode, playlist.length])
+
+  // シャッフル再生用フィルタのトグル
+  const toggleShuffleMovieType = (type) => {
+    setShuffleMovieTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(type)) {
+        next.delete(type)
+      } else {
+        next.add(type)
+      }
+      return next
+    })
+  }
+
+  const toggleShuffleSingerType = (type) => {
+    setShuffleSingerTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(type)) {
+        next.delete(type)
+      } else {
+        next.add(type)
+      }
+      return next
+    })
+  }
+
+  // 時間をフォーマット（秒 -> mm:ss）
+  const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds <= 0) return '0:00'
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // 曲の長さを取得
+  const getSongDuration = (song) => {
+    if (!song) return 0
+    const start = song.start || 0
+
+    if (song.end && Number.isFinite(song.end) && song.end > start) {
+      return song.end - start
+    }
+
+    // YouTubeプレイヤーの動画尺をフォールバックに使用
+    if (Number.isFinite(playerDuration) && playerDuration > 0) {
+      const adjusted = playerDuration - start
+      if (adjusted > 0) return adjusted
+      return playerDuration
+    }
+
+    return 0
+  }
+
+  // 曲の再生進捗（0-100%）
+  const getSongProgress = (song, now) => {
+    if (!song || !Number.isFinite(now)) return 0
+    const duration = getSongDuration(song)
+    if (!duration) return 0
+    const elapsed = Math.max(0, now - (song.start || 0))
+    return Math.max(0, Math.min(100, (elapsed / duration) * 100))
+  }
+
+  // 表示するプレイリスト（前5曲、現在、次5曲）
+  const getVisiblePlaylist = () => {
+    if (playlist.length === 0) return []
+    
+    const visible = []
+    const startIdx = Math.max(0, currentIndex - 5)
+    const endIdx = Math.min(playlist.length - 1, currentIndex + 5)
+    
+    if (startIdx > 0) {
+      visible.push({ type: 'separator', globalIndex: -1 })
+    }
+
+    for (let i = startIdx; i <= endIdx; i++) {
+      visible.push({ 
+        type: 'song', 
+        song: playlist[i], 
+        globalIndex: i 
+      })
+    }
+
+    if (endIdx < playlist.length - 1) {
+      visible.push({ type: 'separator', globalIndex: -2 })
+    }
+
+    return visible
+  }
+
   // 歌から動画カードを作成（movie_idごとにグループ化）
   const getGroupedMovies = () => {
     const movieMap = new Map()
@@ -299,228 +618,48 @@ function App() {
           className={`view-mode-btn ${viewMode === 'random' ? 'active' : ''}`}
           onClick={() => setViewMode('random')}
         >
-          ランダム再生
+          シャッフル再生
         </button>
       </div>
 
       {/* Conditional Rendering Based on View Mode */}
       {viewMode === 'list' ? (
-        <>
-          {/* Filter Navigation - Two Axes */}
-          <nav className="filter-nav">
-            <div className="filter-group">
-              <h3>動画タイプ</h3>
-              <div className="filter-buttons">
-                <button 
-                  className={`filter-btn ${movieType === 'all' ? 'active' : ''}`}
-                  onClick={() => setMovieType('all')}
-                >
-                  すべて
-                </button>
-                <button 
-                  className={`filter-btn ${movieType === 'live' ? 'active' : ''}`}
-                  onClick={() => setMovieType('live')}
-                >
-                  3D ライブ
-                </button>
-                <button 
-                  className={`filter-btn ${movieType === 'streaming' ? 'active' : ''}`}
-                  onClick={() => setMovieType('streaming')}
-                >
-                  歌枠
-                </button>
-                <button 
-                  className={`filter-btn ${movieType === 'mv' ? 'active' : ''}`}
-                  onClick={() => setMovieType('mv')}
-                >
-                  MV
-                </button>
-                <button 
-                  className={`filter-btn ${movieType === 'other' ? 'active' : ''}`}
-                  onClick={() => setMovieType('other')}
-                >
-                  その他
-                </button>
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <h3>出演形式</h3>
-              <div className="filter-buttons">
-                <button 
-                  className={`filter-btn ${singerType === 'all' ? 'active' : ''}`}
-                  onClick={() => setSingerType('all')}
-                >
-                  すべて
-                </button>
-                <button 
-                  className={`filter-btn ${singerType === 'solo' ? 'active' : ''}`}
-                  onClick={() => setSingerType('solo')}
-                >
-                  ソロ
-                </button>
-                <button 
-                  className={`filter-btn ${singerType === 'unit' ? 'active' : ''}`}
-                  onClick={() => setSingerType('unit')}
-                >
-                  コラボ
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Expand/Collapse All Controls */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <button className="expand-btn" onClick={expandAll}>
-                すべて展開
-              </button>
-              <button className="expand-btn" onClick={collapseAll}>
-                すべて閉じる
-              </button>
-            </div>
-            
-            {/* Info Tooltip - positioned absolutely to the right */}
-            <div className="info-icon" style={{ marginLeft: '1rem', position: 'absolute', right: 0 }}>?
-              <div className="info-tooltip">
-                <strong>このページのリンクについて</strong>
-                <ul>
-                  <li><strong>サムネイル・動画タイトル:</strong><br />YouTube動画へのリンク</li>
-                  <li><strong>曲名:</strong><br />その曲の開始位置へのリンク</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="loading">読み込み中...</div>
-          ) : (
-            <>
-              <div className="video-grid">
-                {filteredVideos.map(video => {
-                  const expanded = isExpanded(video)
-                  return (
-                    <div 
-                      key={video.id} 
-                      className={`video-card ${expanded ? 'expanded' : 'collapsed'}`}
-                    >
-                      <a className="video-thumb" href={video.url} target="_blank" rel="noopener noreferrer">
-                        <img 
-                          src={`https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`} 
-                          alt={video.title} 
-                          onError={(e) => e.target.src = 'https://via.placeholder.com/320x180?text=No+Image'}
-                        />
-                      </a>
-                      <div className="video-info">
-                        <div 
-                          className="video-header"
-                          onClick={() => toggleCard(video)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              toggleCard(video)
-                            }
-                          }}
-                        >
-                          <h3>
-                            <a href={video.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                              {video.title}
-                            </a>
-                          </h3>
-                          <p className="video-date">{video.published_at?.split('T')[0]}</p>
-                          <p className="video-songs">{video.songCount} 曲</p>
-                        </div>
-                        <div className="song-area">
-                          {video.songCount > 1 && !expanded && (
-                            <div className="song-placeholder" aria-hidden="true" />
-                          )}
-                          {expanded && video.songs && video.songs.length > 0 && (
-                            <div className="song-list">
-                              {video.songs.map(song => (
-                                <div key={song.id} className="song-item">
-                                  <div className="song-title">
-                                    <a 
-                                      href={buildSongUrl(video.video_id, song)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {song.title}
-                                    </a>
-                                  </div>
-                                  <div className="song-singers">
-                                    {song.singers?.map((singer, idx) => (
-                                      <span 
-                                        key={idx} 
-                                        className="singer-tag"
-                                        style={singer.color ? { backgroundColor: singer.color } : {}}
-                                      >
-                                        {singer.name}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {video.songCount > 1 && (
-                          <div 
-                            className="song-toggle"
-                            onClick={() => toggleCard(video)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault()
-                                toggleCard(video)
-                              }
-                            }}
-                          >
-                            {expanded ? '楽曲情報を閉じる' : `${video.songCount}曲の楽曲情報を表示`}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-          <footer className="copyright-notice">
-            <h2>このサイトについて</h2>
-            <p>
-              このサイトは <strong>ホロライブ</strong> 所属の 
-              <strong>天音かなた</strong> の 3Dライブ・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
-            </p>
-            <p>
-              掲載されている動画、楽曲等のすべてのコンテンツは、
-              それぞれの著作権者に帰属しています。
-            </p>
-            <p>
-              本サイトは営利目的ではなく、天音かなたの歌活動の情報提供を目的としています。
-            </p>
-            <p>
-              本サイトはYouTubeの動画をリンク形式で紹介しており、
-              曲名・動画リンク・再生位置などのメタデータのみで機能実現しています。
-            </p>
-            <p>
-              メタデータはすべて人力で作成しており、YouTubeへのスクレイピングや動画データの保存は一切行っていません。
-            </p>
-            <p>
-              <a href="https://twitter.com/act_q" target="_blank" rel="noopener noreferrer">
-                連絡先 ( Twitter: @act_Q )
-              </a>
-            </p>
-          </footer>
-            </>
-          )}
-        </>
+        <ListView
+          loading={loading}
+          filteredVideos={filteredVideos}
+          movieType={movieType}
+          singerType={singerType}
+          setMovieType={setMovieType}
+          setSingerType={setSingerType}
+          expandAll={expandAll}
+          collapseAll={collapseAll}
+          isExpanded={isExpanded}
+          toggleCard={toggleCard}
+          buildSongUrl={buildSongUrl}
+        />
       ) : (
-        <div className="random-mode-placeholder">
-          <p>ランダム再生機能は準備中です</p>
-        </div>
+        <ShuffleView
+          loading={loading}
+          playlist={playlist}
+          currentIndex={currentIndex}
+          currentTime={currentTime}
+          isPlaying={isPlaying}
+          shuffleMovieTypes={shuffleMovieTypes}
+          shuffleSingerTypes={shuffleSingerTypes}
+          toggleShuffleMovieType={toggleShuffleMovieType}
+          toggleShuffleSingerType={toggleShuffleSingerType}
+          generatePlaylist={generatePlaylist}
+          goToPrevSong={goToPrevSong}
+          goToNextSong={goToNextSong}
+          goToSong={goToSong}
+          togglePlayPause={togglePlayPause}
+          onPlayerReady={onPlayerReady}
+          onPlayerStateChange={onPlayerStateChange}
+          formatTime={formatTime}
+          getSongDuration={getSongDuration}
+          getSongProgress={getSongProgress}
+          getVisiblePlaylist={getVisiblePlaylist}
+        />
       )}
     </div>
   )

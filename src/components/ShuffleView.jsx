@@ -1,0 +1,245 @@
+import React, { useRef } from 'react'
+import YouTube from 'react-youtube'
+
+function ShuffleView({
+  loading,
+  playlist,
+  currentIndex,
+  currentTime,
+  isPlaying,
+  shuffleMovieTypes,
+  shuffleSingerTypes,
+  toggleShuffleMovieType,
+  toggleShuffleSingerType,
+  generatePlaylist,
+  goToPrevSong,
+  goToNextSong,
+  goToSong,
+  togglePlayPause,
+  onPlayerReady,
+  onPlayerStateChange,
+  formatTime,
+  getSongDuration,
+  getSongProgress,
+  getVisiblePlaylist
+}) {
+  const seekbarRef = useRef(null)
+
+  const handleSeekbarClick = (e) => {
+    if (!seekbarRef.current || !playlist.length) return
+    
+    const rect = seekbarRef.current.getBoundingClientRect()
+    const percent = (e.clientX - rect.left) / rect.width
+    const duration = getSongDuration(playlist[currentIndex])
+    
+    if (duration > 0) {
+      const newTime = playlist[currentIndex].start + (percent * duration)
+      
+      // playerRef経由でシーク
+      if (window.__shuffleViewPlayerRef?.current?.seekTo) {
+        window.__shuffleViewPlayerRef.current.seekTo(newTime, true)
+      }
+    }
+  }
+  return (
+    <div className="shuffle-mode">
+      {/* フィルタ */}
+      <nav className="shuffle-filter-nav">
+        <div className="filter-group">
+          <h3>動画タイプ</h3>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn toggle-btn ${shuffleMovieTypes.has('live') ? 'active' : ''}`}
+              onClick={() => toggleShuffleMovieType('live')}
+            >
+              3D ライブ
+            </button>
+            <button 
+              className={`filter-btn toggle-btn ${shuffleMovieTypes.has('streaming') ? 'active' : ''}`}
+              onClick={() => toggleShuffleMovieType('streaming')}
+            >
+              歌枠
+            </button>
+            <button 
+              className={`filter-btn toggle-btn ${shuffleMovieTypes.has('mv') ? 'active' : ''}`}
+              onClick={() => toggleShuffleMovieType('mv')}
+            >
+              MV
+            </button>
+            <button 
+              className={`filter-btn toggle-btn ${shuffleMovieTypes.has('other') ? 'active' : ''}`}
+              onClick={() => toggleShuffleMovieType('other')}
+            >
+              その他
+            </button>
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <h3>出演形式</h3>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn toggle-btn ${shuffleSingerTypes.has('solo') ? 'active' : ''}`}
+              onClick={() => toggleShuffleSingerType('solo')}
+            >
+              ソロ
+            </button>
+            <button 
+              className={`filter-btn toggle-btn ${shuffleSingerTypes.has('unit') ? 'active' : ''}`}
+              onClick={() => toggleShuffleSingerType('unit')}
+            >
+              コラボ
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* エラー表示 */}
+      {(shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0) && (
+        <div className="shuffle-error">
+          少なくとも1つの動画タイプと1つの出演形式を選択してください
+        </div>
+      )}
+
+      {/* 再生開始/再シャッフルボタン */}
+      <div className="shuffle-controls-top">
+        <button 
+          className="reshuffle-btn" 
+          onClick={generatePlaylist}
+          disabled={shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0}
+        >
+          {playlist.length === 0 ? '▶️ 再生開始' : '🔀 再シャッフル'}
+        </button>
+      </div>
+
+      {/* プレイヤーとコンテンツ */}
+      {loading ? (
+        <div className="loading">読み込み中...</div>
+      ) : playlist.length === 0 ? (
+        <div className="shuffle-empty">
+          {shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0 
+            ? 'フィルタを選択してから「再生開始」を押してください' 
+            : 'フィルタを設定して「再生開始」を押してください'}
+        </div>
+      ) : (
+        <div className="shuffle-player-container">
+          {/* 現在の曲情報 */}
+          <div className="current-song-info">
+            <h2 className="song-title">
+              <a 
+                href={`https://www.youtube.com/watch?v=${playlist[currentIndex].video_id}&t=${playlist[currentIndex].start}s`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {playlist[currentIndex].title}
+              </a>
+            </h2>
+            <p className="video-title">{playlist[currentIndex].video_title}</p>
+            <div className="song-singers">
+              {playlist[currentIndex].singers?.map((singer, idx) => (
+                <span 
+                  key={idx} 
+                  className="singer-tag"
+                  style={singer.color ? { backgroundColor: singer.color } : {}}
+                >
+                  {singer.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* YouTubeプレーヤー */}
+          <div className="youtube-player-wrapper">
+            <YouTube
+              key={`yt-${playlist[currentIndex].video_id}-${playlist[currentIndex].start}`}
+              videoId={playlist[currentIndex].video_id}
+              opts={{
+                width: '100%',
+                height: '100%',
+                playerVars: {
+                  autoplay: 1,
+                  start: playlist[currentIndex].start,
+                  origin: window.location.origin,
+                },
+              }}
+              onReady={(e) => onPlayerReady?.(e)}
+              onStateChange={(e) => onPlayerStateChange?.(e)}
+            />
+          </div>
+
+          {/* シークバー */}
+          <div className="seekbar-container">
+            <span className="time-label">
+              {formatTime(currentTime - playlist[currentIndex].start)}
+            </span>
+            <div 
+              className="seekbar"
+              ref={seekbarRef}
+              onClick={handleSeekbarClick}
+            >
+              <div 
+                className="seekbar-progress" 
+                style={{ 
+                  width: `${getSongProgress(playlist[currentIndex], currentTime)}%` 
+                }}
+              />
+            </div>
+            <span className="time-label">
+              {formatTime(getSongDuration(playlist[currentIndex]))}
+            </span>
+          </div>
+
+          {/* コントロールボタン */}
+          <div className="player-controls">
+            <button 
+              className="control-btn"
+              onClick={goToPrevSong}
+              disabled={currentIndex === 0}
+            >
+              ⏮ 前の曲
+            </button>
+            <button 
+              className="control-btn"
+              onClick={togglePlayPause}
+              disabled={!playlist.length}
+            >
+              {isPlaying ? '⏸ 一時停止' : '▶️ 再生'}
+            </button>
+            <button 
+              className="control-btn"
+              onClick={goToNextSong}
+              disabled={currentIndex === playlist.length - 1}
+            >
+              次の曲 ⏭
+            </button>
+          </div>
+
+          {/* プレイリスト表示 */}
+          <div className="playlist-container">
+            <h3>プレイリスト</h3>
+            <div className="playlist">
+              {getVisiblePlaylist().map((item) => (
+                <div 
+                  key={item.globalIndex}
+                  className={`playlist-item ${item.globalIndex === currentIndex ? 'current' : ''} ${item.type}`}
+                  onClick={() => item.type === 'song' && goToSong(item.globalIndex)}
+                >
+                  {item.type === 'separator' ? (
+                    <div className="playlist-separator">...</div>
+                  ) : (
+                    <>
+                      <div className="playlist-song-title">{item.song.title}</div>
+                      <div className="playlist-song-video">{item.song.video_title}</div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default ShuffleView

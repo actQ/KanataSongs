@@ -7,7 +7,11 @@ import './App.css'
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://d34uks5q5372sl.cloudfront.net'
 
 function App() {
-  const [viewMode, setViewMode] = useState('list') // 'list' or 'random'
+  const [viewMode, setViewMode] = useState(() => {
+    const hash = (window.location.hash || '').toLowerCase()
+    if (hash.includes('list')) return 'list'
+    return 'random'
+  }) // 'list' or 'random'
   const [movieType, setMovieType] = useState('all') // 'all', 'live', 'mv', 'streaming', 'other'
   const [singerType, setSingerType] = useState('all') // 'all', 'solo', 'unit'
   const [loading, setLoading] = useState(true)
@@ -614,6 +618,31 @@ function App() {
 
   const groupedMovies = getGroupedMovies()
 
+  // Route sync (hash-based): #/shuffle (default) and #/list
+  useEffect(() => {
+    const applyHash = () => {
+      const hash = (window.location.hash || '').toLowerCase()
+      if (hash.includes('list')) {
+        setViewMode('list')
+      } else if (hash.includes('shuffle') || hash.includes('random')) {
+        setViewMode('random')
+      }
+    }
+
+    applyHash()
+
+    const onHashChange = () => applyHash()
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    const nextHash = viewMode === 'list' ? '#/list' : '#/shuffle'
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash)
+    }
+  }, [viewMode])
+
   // フィルタリング
   const filteredVideos = groupedMovies.filter(m => {
     // 動画タイプでフィルタ
@@ -664,16 +693,16 @@ function App() {
       {/* View Mode Selection */}
       <div className="view-mode-selector">
         <button 
-          className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
-          onClick={() => setViewMode('list')}
-        >
-          楽曲一覧
-        </button>
-        <button 
           className={`view-mode-btn ${viewMode === 'random' ? 'active' : ''}`}
           onClick={() => setViewMode('random')}
         >
           シャッフル再生
+        </button>
+        <button 
+          className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
+          onClick={() => setViewMode('list')}
+        >
+          楽曲一覧
         </button>
       </div>
 

@@ -263,6 +263,12 @@ header p {
   line-height: 1.3;
 }
 
+.current-song-info .song-title.ticker-shell,
+.current-song-info .video-title.ticker-shell {
+  height: 1.6em;
+  line-height: 1.3;
+}
+
 .current-song-info .song-title a {
   color: #0066cc;
   text-decoration: none;
@@ -281,11 +287,65 @@ header p {
 }
 
 .current-song-info .song-singers {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  justify-content: left;
 }
+
+.ticker-shell {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-shell.scrolling .ticker-rail {
+  animation-name: ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.ticker-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  width: max-content;
+}
+
+.ticker-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ticker-content a {
+  display: inline-block;
+}
+
+.ticker-content.ticker-clone {
+  opacity: 1;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--ticker-distance, 100%)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-shell.scrolling .ticker-rail {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
+.song-singers.ticker-shell {
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+}
+
 
 .youtube-player-wrapper {
   position: relative;
@@ -462,11 +522,27 @@ header p {
   }
 
   .player-controls {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
-  .control-btn {
-    width: 100%;
+  .player-controls .control-btn {
+    min-width: 120px;
+  }
+
+  /* 優先: 前と次を上段、再生は下段でセンター。1行に収まる幅では自然に横並び。 */
+  .player-controls .control-btn:nth-child(1) {
+    order: 1;
+    flex: 1 1 48%;
+  }
+  .player-controls .control-btn:nth-child(2) {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  .player-controls .control-btn:nth-child(3) {
+    order: 2;
+    flex: 1 1 48%;
   }
 
   .playlist {

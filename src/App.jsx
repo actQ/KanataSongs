@@ -25,6 +25,7 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0)
   const [playerDuration, setPlayerDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const playAttemptRef = useRef(0)
   const playerRef = useRef(null)
 
   useEffect(() => {
@@ -311,13 +312,19 @@ function App() {
   const onPlayerReady = (event) => {
     const currentSong = playlist[currentIndex]
     if (!currentSong) return
-
+    
+    // alert("ready");
     // iframe が DOM に接続されているか確認し、別動画のイベントは無視
     const iframe = event?.target?.getIframe?.()
-    if (!iframe || !iframe.isConnected) return
+    if (!iframe || !iframe.isConnected){
+      // alert("iframe");
+      return
+    } 
     const data = event?.target?.getVideoData?.()
-    if (data && data.video_id && data.video_id !== currentSong.video_id) return
-
+    if (data && data.video_id && data.video_id !== currentSong.video_id){
+      // alert("data");
+      return
+    } 
     playerRef.current = event.target
     // ShuffleView用にグローバル参照も設定
     window.__shuffleViewPlayerRef = playerRef
@@ -329,6 +336,16 @@ function App() {
     if (currentSong.start > 0) {
       event.target.seekTo(currentSong.start, true)
     }
+    // //再生状態を取得
+    // const playerState = event.data
+    // //再生状態でない場合は再生する
+    // if (playerState !== window.YT?.PlayerState?.PLAYING) {
+    //   if (typeof event.target.playVideo === 'function') {
+    //     event.target.playVideo()
+    //     alert("play");
+    //     setIsPlaying(true)
+    //   }
+    // }
   }
 
   // YouTubeプレーヤーの状態変化時
@@ -348,6 +365,11 @@ function App() {
     } else if (playerState === window.YT?.PlayerState?.ENDED) {
       setIsPlaying(false)
       goToNextSong()
+    } else if (playerState === window.YT?.PlayerState?.CUED) {
+      // CUED は待機状態なので再生待ちへ
+      setIsPlaying(false)
+    } else if (playerState === window.YT?.PlayerState?.BUFFERING) {
+      // BUFFERING 中にplayがブロックされているケースがあるので、様子見
     }
   }
 
@@ -362,17 +384,50 @@ function App() {
       }
     } else {
       if (typeof playerRef.current.playVideo === 'function') {
+        playAttemptRef.current += 1
+        const attemptId = playAttemptRef.current
         playerRef.current.playVideo()
+        // 300ms 後に PLAYING へ遷移しなければ再生されていないとみなす
+        setTimeout(() => {
+          if (playAttemptRef.current === attemptId && playerRef.current) {
+            const state = playerRef.current.getPlayerState?.()
+            if (state !== window.YT?.PlayerState?.PLAYING) {
+              setIsPlaying(false)
+            }
+          }
+        }, 300)
         setIsPlaying(true)
       }
     }
   }
 
-  // 曲が切り替わるたびにプレイヤー参照をリセット（次のonReadyまでnull）
+  // 曲が切り替わるたびに既存プレイヤーで動画を読み替える
   useEffect(() => {
     if (viewMode !== 'random') return
-    playerRef.current = null
-  }, [currentIndex, viewMode])
+    const player = playerRef.current
+    const song = playlist[currentIndex]
+    if (!player || !song) return
+
+    const iframe = player.getIframe?.()
+    if (!iframe || !iframe.isConnected) {
+      // プレイヤーが既に破棄/未接続なら処理しない
+      playerRef.current = null
+      return
+    }
+
+    if (typeof player.loadVideoById === 'function') {
+      player.loadVideoById({
+        videoId: song.video_id,
+        startSeconds: song.start || 0,
+      })
+      setIsPlaying(false) // モバイル自動再生は期待しない
+      setCurrentTime(song.start || 0)
+      setPlayerDuration(0)
+    } else if (typeof player.seekTo === 'function') {
+      player.seekTo(song.start || 0, true)
+      setIsPlaying(false)
+    }
+  }, [currentIndex, viewMode, playlist])
 
   // 再生時刻の更新（定期的に呼び出す）
   useEffect(() => {

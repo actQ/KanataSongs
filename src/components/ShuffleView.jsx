@@ -1,5 +1,80 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import YouTube from 'react-youtube'
+
+function TickerText({ as: Component = 'div', children, className = '', gap = 32 }) {
+  const containerRef = useRef(null)
+  const contentRef = useRef(null)
+  const [meta, setMeta] = useState({ scroll: false, distance: 0, duration: 12 })
+
+  useEffect(() => {
+    const measure = () => {
+      if (!containerRef.current || !contentRef.current) return
+
+      const containerWidth = containerRef.current.offsetWidth
+      const contentWidth = contentRef.current.scrollWidth
+      const shouldScroll = contentWidth > containerWidth + 2
+      const distance = contentWidth + gap
+      const pxPerSec = 80
+      const duration = Math.min(30, Math.max(12, distance / pxPerSec))
+
+      setMeta((prev) => {
+        if (
+          prev.scroll === shouldScroll &&
+          prev.distance === distance &&
+          prev.duration === duration
+        ) {
+          return prev
+        }
+        return { scroll: shouldScroll, distance, duration }
+      })
+    }
+
+    measure()
+
+    const resizeObserver = new ResizeObserver(measure)
+    if (containerRef.current) resizeObserver.observe(containerRef.current)
+    if (contentRef.current) resizeObserver.observe(contentRef.current)
+
+    window.addEventListener('resize', measure)
+
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [children, gap])
+
+  const combinedClassName = `${meta.scroll ? 'ticker-shell scrolling' : 'ticker-shell'}${
+    className ? ` ${className}` : ''
+  }`
+
+  return (
+    <Component
+      className={combinedClassName}
+      ref={containerRef}
+    >
+      <div
+        className="ticker-rail"
+        style={
+          meta.scroll
+            ? {
+                '--ticker-distance': `${meta.distance}px`,
+                animationDuration: `${meta.duration}s`
+              }
+            : undefined
+        }
+      >
+        <span className="ticker-content" ref={contentRef}>
+          {children}
+        </span>
+        {meta.scroll && (
+          <span className="ticker-content ticker-clone" aria-hidden="true">
+            {children}
+          </span>
+        )}
+      </div>
+    </Component>
+  )
+}
 
 function ShuffleView({
   loading,
@@ -125,7 +200,11 @@ function ShuffleView({
         <div className="shuffle-player-container">
           {/* 現在の曲情報 */}
           <div className="current-song-info">
-            <h2 className="song-title">
+            <TickerText
+              as="h2"
+              className="song-title"
+              gap={24}
+            >
               <a 
                 href={`https://www.youtube.com/watch?v=${playlist[currentIndex].video_id}&t=${playlist[currentIndex].start}s`}
                 target="_blank"
@@ -133,9 +212,11 @@ function ShuffleView({
               >
                 {playlist[currentIndex].title}
               </a>
-            </h2>
-            <p className="video-title">{playlist[currentIndex].video_title}</p>
-            <div className="song-singers">
+            </TickerText>
+            <TickerText as="p" className="video-title" gap={20}>
+              {playlist[currentIndex].video_title}
+            </TickerText>
+            <TickerText as="div" className="song-singers" gap={16}>
               {playlist[currentIndex].singers?.map((singer, idx) => (
                 <span 
                   key={idx} 
@@ -145,19 +226,19 @@ function ShuffleView({
                   {singer.name}
                 </span>
               ))}
-            </div>
+            </TickerText>
           </div>
 
           {/* YouTubeプレーヤー */}
           <div className="youtube-player-wrapper">
             <YouTube
-              key={`yt-${playlist[currentIndex].video_id}-${playlist[currentIndex].start}`}
               videoId={playlist[currentIndex].video_id}
               opts={{
                 width: '100%',
                 height: '100%',
                 playerVars: {
                   autoplay: 1,
+                  controls: 1,
                   start: playlist[currentIndex].start,
                   origin: window.location.origin,
                 },

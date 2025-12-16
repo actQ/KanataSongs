@@ -291,7 +291,11 @@ header p {
 }
 
 .current-song-info .song-singers {
-  justify-content: left;
+  justify-content: center;
+}
+
+.current-song-info .song-singers.ticker-shell.scrolling {
+  justify-content: flex-start;
 }
 
 .ticker-shell {

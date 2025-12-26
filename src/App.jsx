@@ -31,6 +31,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const playAttemptRef = useRef(0)
   const playerRef = useRef(null)
+  const lastLoadedVideoIdRef = useRef(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -268,6 +269,7 @@ function App() {
       return
     }
     const shuffled = shuffleArray(filteredSongs)
+    // const shuffled = filteredSongs // デバッグ用。
     setPlaylist(shuffled)
     setCurrentIndex(0)
     setCurrentTime(0)
@@ -282,6 +284,7 @@ function App() {
       setCurrentTime(0)
       setPlayerDuration(0)
       playerRef.current = null
+      lastLoadedVideoIdRef.current = null
     }
   }, [viewMode])
 
@@ -317,27 +320,39 @@ function App() {
     const currentSong = playlist[currentIndex]
     if (!currentSong) return
     
+    // console.log(`📢 [onPlayerReady] Called for song at index ${currentIndex}`)
+    
     // alert("ready");
     // iframe が DOM に接続されているか確認し、別動画のイベントは無視
     const iframe = event?.target?.getIframe?.()
     if (!iframe || !iframe.isConnected){
+      // console.log(`   ❌ Rejected: iframe not connected`)
       // alert("iframe");
       return
     } 
     const data = event?.target?.getVideoData?.()
+    // console.log(`   Video data:`, data?.video_id, `Expected:`, currentSong.video_id)
     if (data && data.video_id && data.video_id !== currentSong.video_id){
+      // console.log(`   ❌ Rejected: video_id mismatch`)
       // alert("data");
       return
     } 
+    // console.log(`   ✅ Accepted: Setting up player`)
     playerRef.current = event.target
     // ShuffleView用にグローバル参照も設定
     window.__shuffleViewPlayerRef = playerRef
+    
+    // 初回読み込み時の動画IDを記録
+    if (data?.video_id) {
+      lastLoadedVideoIdRef.current = data.video_id
+    }
     
     if (typeof event.target.getDuration === 'function') {
       const dur = event.target.getDuration()
       if (Number.isFinite(dur)) setPlayerDuration(dur)
     }
     if (currentSong.start > 0) {
+      // console.log(`🎯 [onPlayerReady] Seeking to ${currentSong.start}s`)
       event.target.seekTo(currentSong.start, true)
     }
     // //再生状態を取得
@@ -366,9 +381,9 @@ function App() {
       setIsPlaying(true)
     } else if (playerState === window.YT?.PlayerState?.PAUSED) {
       setIsPlaying(false)
-    } else if (playerState === window.YT?.PlayerState?.ENDED) {
-      setIsPlaying(false)
-      goToNextSong()
+    // } else if (playerState === window.YT?.PlayerState?.ENDED) { // 別のところで終了時刻チェックしているので不要
+    //   setIsPlaying(false)
+    //   goToNextSong()
     } else if (playerState === window.YT?.PlayerState?.CUED) {
       // CUED は待機状態なので再生待ちへ
       setIsPlaying(false)
@@ -419,17 +434,37 @@ function App() {
       return
     }
 
+    // 現在再生中の動画IDを取得（getVideoDataが使えない場合は前回読み込んだIDを使用）
+    let currentVideoId = lastLoadedVideoIdRef.current
+    if (typeof player.getVideoData === 'function') {
+      const currentVideoData = player.getVideoData()
+      if (currentVideoData && currentVideoData.video_id) {
+        currentVideoId = currentVideoData.video_id
+      }
+    }
+    
+    // console.log(`currentVideoId: ${currentVideoId}, song.video_id: ${song.video_id}`)
+
+    // 常にloadVideoByIdを使用して確実に指定位置から再生
     if (typeof player.loadVideoById === 'function') {
+      // console.log(`🎯 [useEffect-trackChange] Loading video ${song.video_id} at ${song.start || 0}s`)
       player.loadVideoById({
         videoId: song.video_id,
         startSeconds: song.start || 0,
       })
-      setIsPlaying(false) // モバイル自動再生は期待しない
+      lastLoadedVideoIdRef.current = song.video_id
+      setIsPlaying(false)
       setCurrentTime(song.start || 0)
       setPlayerDuration(0)
-    } else if (typeof player.seekTo === 'function') {
-      player.seekTo(song.start || 0, true)
-      setIsPlaying(false)
+      // console.log(`✓ Loaded video ${song.video_id} at ${song.start || 0}s`)
+      
+      // ロード直後の実際の位置を確認
+      // setTimeout(() => {
+      //   if (typeof player.getCurrentTime === 'function') {
+      //     const actualTime = player.getCurrentTime()
+      //     console.log(`   ⏱️ Actual position after load: ${actualTime}s (expected: ${song.start || 0}s)`)
+      //   }
+      // }, 500)
     }
   }, [currentIndex, viewMode, playlist])
 
@@ -448,6 +483,13 @@ function App() {
         // 終了時刻チェック
         const currentSong = playlist[currentIndex]
         if (currentSong && currentSong.end && time >= currentSong.end) {
+          // console.log(`🔚 Song ended at ${time}s (end: ${currentSong.end}s)`)
+          // console.log(`   Current player state:`, player.getPlayerState?.())
+          // console.log(`   getVideoData available:`, typeof player.getVideoData === 'function')
+          // if (typeof player.getVideoData === 'function') {
+          //   console.log(`   getVideoData result:`, player.getVideoData())
+          // }
+          setIsPlaying(false)
           goToNextSong()
         }
       }
@@ -462,16 +504,6 @@ function App() {
 
     return () => clearInterval(interval)
   }, [viewMode, currentIndex, playlist])
-
-  // 動画が変わったときに開始位置にシーク
-  useEffect(() => {
-    if (viewMode === 'random' && playerRef.current && playlist[currentIndex]) {
-      const currentSong = playlist[currentIndex]
-      if (currentSong.start > 0) {
-        playerRef.current.seekTo(currentSong.start, true)
-      }
-    }
-  }, [currentIndex, viewMode, playlist])
 
   // プレイヤー破棄: プレイリストが空になったら古いプレイヤー参照を破棄
   useEffect(() => {

@@ -112,6 +112,7 @@ function ShuffleView({
       
       // playerRef経由でシーク
       if (window.__shuffleViewPlayerRef?.current?.seekTo) {
+        // console.log(`🎯 [Seekbar click] Seeking to ${newTime}s`)
         window.__shuffleViewPlayerRef.current.seekTo(newTime, true)
       }
     }

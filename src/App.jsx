@@ -383,8 +383,16 @@ function App() {
     } else if (playerState === window.YT?.PlayerState?.PAUSED) {
       setIsPlaying(false)
     } else if (playerState === window.YT?.PlayerState?.ENDED) {
+      // 動画尺に対してsong.endがほぼ終端(残り1s未満)のときのみ次へ進む
+      let allowNext = true
+      if (currentSong?.end != null && Number.isFinite(playerDuration) && playerDuration > 0) {
+        allowNext = currentSong.end > (playerDuration - 1)
+      }
+
       setIsPlaying(false)
-      goToNextSong()
+      if (allowNext) {
+        goToNextSong()
+      }
     } else if (playerState === window.YT?.PlayerState?.CUED) {
       // CUED は待機状態なので再生待ちへ
       setIsPlaying(false)

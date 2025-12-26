@@ -659,6 +659,7 @@ function App() {
       } else if (hash.includes('shuffle') || hash.includes('random')) {
         setViewMode('random')
       }
+      // / でアクセスした場合はハッシュを変更しない（shuffleをデフォルト表示）
     }
 
     applyHash()
@@ -669,9 +670,17 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const nextHash = viewMode === 'list' ? '#/list' : '#/shuffle'
-    if (window.location.hash !== nextHash) {
-      window.history.replaceState(null, '', nextHash)
+    // viewModeがlistに変わった場合は常にハッシュを更新
+    if (viewMode === 'list') {
+      if (window.location.hash !== '#/list') {
+        window.history.replaceState(null, '', '#/list')
+      }
+      return
+    }
+    
+    // viewModeがrandomの場合、既にハッシュがある場合のみ更新（/からの場合は維持）
+    if (window.location.hash && window.location.hash !== '#/shuffle') {
+      window.history.replaceState(null, '', '#/shuffle')
     }
   }, [viewMode])
 

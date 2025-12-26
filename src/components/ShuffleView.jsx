@@ -214,7 +214,7 @@ function ShuffleView({
                 {playlist[currentIndex].title}
               </a>
             </TickerText>
-            <TickerText as="p" className="video-title" gap={20}>
+            <TickerText as="div" className="video-title" gap={20}>
               {playlist[currentIndex].video_title}
             </TickerText>
             <TickerText as="div" className="song-singers" gap={16}>
@@ -240,6 +240,7 @@ function ShuffleView({
                 playerVars: {
                   autoplay: 1,
                   controls: 1,
+                  rel: 0,
                   start: playlist[currentIndex].start,
                   origin: window.location.origin,
                 },

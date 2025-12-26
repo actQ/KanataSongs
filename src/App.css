@@ -645,6 +645,60 @@ header p {
   box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
 }
 
+/* Song Search */
+
+.song-search-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 1rem;
+}
+
+.song-search-inner {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+}
+
+.song-search-input {
+  width: 100%;
+  padding: 0.75rem 2.6rem 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid rgba(0, 102, 204, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.song-search-input::placeholder {
+  color: #999;
+}
+
+.song-search-input:focus {
+  outline: none;
+  border-color: rgba(0, 102, 204, 0.8);
+  box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+  background: white;
+}
+
+.song-search-clear {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+}
+
+.song-search-clear:hover {
+  color: #1a4c8f;
+}
+
 /* Expand/Collapse All Controls */
 .expand-controls {
   display: flex;

@@ -12,8 +12,19 @@ function ListView({
   isExpanded,
   toggleCard,
   buildSongUrl,
-  showFooter = true
+  showFooter = true,
+  songSearchQuery = '',
+  setSongSearchQuery = () => {}
 }) {
+  // 曲名検索によるフィルタリング
+  const searchFilteredVideos = songSearchQuery.trim() === '' 
+    ? filteredVideos
+    : filteredVideos.map(video => ({
+        ...video,
+        songs: video.songs.filter(song => 
+          song.title.toLowerCase().includes(songSearchQuery.toLowerCase())
+        )
+      })).filter(video => video.songs.length > 0)
   return (
     <>
       {/* Filter Navigation - Two Axes */}
@@ -79,6 +90,29 @@ function ListView({
         </div>
       </nav>
 
+      {/* Song Search */}
+      <div className="song-search-container">
+        <div className="song-search-inner">
+          <input 
+            type="text"
+            placeholder="曲名で検索..."
+            value={songSearchQuery}
+            onChange={(e) => setSongSearchQuery(e.target.value)}
+            className="song-search-input"
+          />
+          {songSearchQuery && (
+            <button
+              type="button"
+              className="song-search-clear"
+              onClick={() => setSongSearchQuery('')}
+              aria-label="検索をクリア"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Expand/Collapse All Controls */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -107,7 +141,7 @@ function ListView({
       ) : (
         <>
           <div className="video-grid">
-            {filteredVideos.map(video => {
+            {searchFilteredVideos.map(video => {
               const expanded = isExpanded(video)
               return (
                 <div 

@@ -14,6 +14,7 @@ function App() {
   }) // 'list' or 'random'
   const [movieType, setMovieType] = useState('all') // 'all', 'live', 'mv', 'streaming', 'other'
   const [singerType, setSingerType] = useState('all') // 'all', 'solo', 'unit'
+  const [songSearchQuery, setSongSearchQuery] = useState('') // 曲名検索
   const [loading, setLoading] = useState(true)
   const [movies, setMovies] = useState([])
   const [songs, setSongs] = useState([])
@@ -761,6 +762,8 @@ function App() {
           isExpanded={isExpanded}
           toggleCard={toggleCard}
           buildSongUrl={buildSongUrl}
+          songSearchQuery={songSearchQuery}
+          setSongSearchQuery={setSongSearchQuery}
           showFooter={false}
         />
       ) : (

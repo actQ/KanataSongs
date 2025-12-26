@@ -382,9 +382,9 @@ function App() {
       setIsPlaying(true)
     } else if (playerState === window.YT?.PlayerState?.PAUSED) {
       setIsPlaying(false)
-    // } else if (playerState === window.YT?.PlayerState?.ENDED) { // 別のところで終了時刻チェックしているので不要
-    //   setIsPlaying(false)
-    //   goToNextSong()
+    } else if (playerState === window.YT?.PlayerState?.ENDED) {
+      setIsPlaying(false)
+      goToNextSong()
     } else if (playerState === window.YT?.PlayerState?.CUED) {
       // CUED は待機状態なので再生待ちへ
       setIsPlaying(false)

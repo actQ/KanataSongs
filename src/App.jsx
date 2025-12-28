@@ -812,7 +812,7 @@ function App() {
           <a href="https://www.youtube.com/@AmaneKanata" target="_blank" rel="noopener noreferrer">
             <strong>天音かなた</strong> 
           </a>
-          の3Dライブ・歌枠・MVなどの動画の歌唱部分を楽曲一覧としてまとめた非公式のファンサイトです。
+          の3Dライブ・歌枠・MVなどの動画の歌唱部分をシャッフル再生できるようにまとめた非公式のファンサイトです。
         </p>
         <p>
           掲載されている動画、楽曲等のすべてのコンテンツは、

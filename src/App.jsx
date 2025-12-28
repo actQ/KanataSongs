@@ -33,6 +33,8 @@ function App() {
   const playAttemptRef = useRef(0)
   const playerRef = useRef(null)
   const lastLoadedVideoIdRef = useRef(null)
+  const lastNextCallRef = useRef(0)
+  const NEXT_THROTTLE_MS = 800 // 次曲送りの短期多重呼び出しを抑制
 
   useEffect(() => {
     const fetchData = async () => {
@@ -291,7 +293,10 @@ function App() {
 
   // 次の曲へ
   const goToNextSong = () => {
+    const now = Date.now()
+    if (now - (lastNextCallRef.current || 0) < NEXT_THROTTLE_MS) return
     if (currentIndex < playlist.length - 1) {
+      lastNextCallRef.current = now
       setCurrentIndex(prev => prev + 1)
       setCurrentTime(0)
       setPlayerDuration(0)

@@ -903,7 +903,7 @@ header p {
   padding: 2rem;
 }
 
-.copyright-notice {
+.footer-notice {
   background: rgba(11, 1, 223, 0.3);
   border-top: 2px solid rgba(255, 255, 255, 0.2);
   margin-top: 4rem;
@@ -913,31 +913,31 @@ header p {
   backdrop-filter: blur(10px);
 }
 
-.copyright-notice h2 {
+.footer-notice h2 {
   color: white;
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
 
-.copyright-notice p {
+.footer-notice p {
   margin-bottom: 1rem;
   line-height: 1.6;
   font-size: 0.95rem;
 }
 
-.copyright-notice strong {
+.footer-notice strong {
   color: #8CD6E0;
   font-weight: 600;
 }
 
-.copyright-notice a {
+.footer-notice a {
   color: #8CD6E0;
   text-decoration: none;
   border-bottom: 1px solid #8CD6E0;
   transition: opacity 0.3s ease;
 }
 
-.copyright-notice a:hover {
+.footer-notice a:hover {
   opacity: 0.8;
 }
 
@@ -982,4 +982,8 @@ header p {
   .info-tooltip::before {
     display: none;
   }
+
+  .footer-notice {
+  padding: 1.5rem;
+}
 }

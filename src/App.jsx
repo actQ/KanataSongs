@@ -805,11 +805,14 @@ function App() {
       )}
 
       {/* Common Footer */}
-      <footer className="copyright-notice">
+      <footer className="footer-notice">
         <h2>このサイトについて</h2>
         <p>
-          このサイトは <strong>ホロライブ</strong> 所属の 
-          <strong>天音かなた</strong> の 3Dライブ・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
+          このサイトは ホロライブ4期生 
+          <a href="https://www.youtube.com/@AmaneKanata" target="_blank" rel="noopener noreferrer">
+            <strong>天音かなた</strong> 
+          </a>
+          の3Dライブ・歌枠・MVなどの動画から歌唱部分をまとめた非公式のファンサイトです。
         </p>
         <p>
           掲載されている動画、楽曲等のすべてのコンテンツは、
@@ -825,6 +828,16 @@ function App() {
         <p>
           メタデータはすべて人力で作成しており、YouTubeへのスクレイピングや動画データの保存は一切行っていません。
         </p>
+        <h2>動作環境</h2>
+        <p>
+          PC(Windows11)のブラウザ(Google Chrome, Mozilla Firefox, Microsoft Edge)および、
+          Androidのブラウザ(Google Chrome)で動作確認済みです。
+        </p>
+        <p>
+          iOSのブラウザ(Safari, Google Chrome)など一部環境ではブラウザ側の動作制限により正常に動作しない場合があります。
+        </p>
+        
+        <h2>問い合わせ先</h2>
         <p>
           <a href="https://twitter.com/act_q" target="_blank" rel="noopener noreferrer">
             連絡先 ( Twitter: @act_Q )

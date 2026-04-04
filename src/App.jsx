@@ -6,6 +6,24 @@ import './App.css'
 // Allow overriding API base per environment (dev:local uses /dev)
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://d34uks5q5372sl.cloudfront.net'
 
+// API for measuring user usage
+const API_WATCH_ENDPOINT = "https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click";
+
+function useClickTracker(buttonId) {
+  const track = async () => {
+    try {
+      await fetch(API_WATCH_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buttonId }),
+      });
+    } catch (e) {
+      // console.warn("click tracking failed", e);
+    }
+  };
+  return track;
+}
+
 function App() {
   const [viewMode, setViewMode] = useState(() => {
     const hash = (window.location.hash || '').toLowerCase()
@@ -35,6 +53,8 @@ function App() {
   const lastLoadedVideoIdRef = useRef(null)
   const lastNextCallRef = useRef(0)
   const NEXT_THROTTLE_MS = 800 // 次曲送りの短期多重呼び出しを抑制
+
+  const reshuffleBtnTracker = useClickTracker("reshuffle-btn");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -277,6 +297,7 @@ function App() {
     setCurrentIndex(0)
     setCurrentTime(0)
     setPlayerDuration(0)
+    reshuffleBtnTracker();
   }
 
   // シャッフル再生モードに切り替えたときはプレイリストをクリア

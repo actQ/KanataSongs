@@ -4,12 +4,14 @@ import ShuffleView from './components/ShuffleView'
 import './App.css'
 
 // PROD or DEV
+const AWS_BRANCH_NAME =
+  import.meta.env.VITE_AWS_BRANCH || import.meta.env.AWS_BRANCH || ''
 const IS_PROD = AWS_BRANCH_NAME === 'main'
 
 // Allow overriding API base per environment (dev:local uses /dev)
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  (IS_PROD
+  (import.meta.env.PROD
     ? 'https://d34uks5q5372sl.cloudfront.net'
     : 'https://dmoj3wmwzmjv6.cloudfront.net')
 
@@ -17,10 +19,8 @@ const API_BASE =
 const API_WATCH_ENDPOINT =
   import.meta.env.VITE_API_WATCH_ENDPOINT ||
   'https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click'
-const AWS_BRANCH_NAME =
-  import.meta.env.VITE_AWS_BRANCH || import.meta.env.AWS_BRANCH || ''
-const ENABLE_CLICK_TRACKING = IS_PROD
-const SHOW_DEV_ENV_INFO = !IS_PROD
+const ENABLE_CLICK_TRACKING = AWS_BRANCH_NAME === 'main'
+const SHOW_DEV_ENV_INFO = !import.meta.env.PROD
 
 function useClickTracker(buttonId, enabled = false) {
   const track = async () => {

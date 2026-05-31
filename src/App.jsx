@@ -11,7 +11,7 @@ const IS_PROD = AWS_BRANCH_NAME === 'main'
 // Allow overriding API base per environment (dev:local uses /dev)
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  (import.meta.env.PROD
+  (IS_PROD
     ? 'https://d34uks5q5372sl.cloudfront.net'
     : 'https://dmoj3wmwzmjv6.cloudfront.net')
 
@@ -20,7 +20,7 @@ const API_WATCH_ENDPOINT =
   import.meta.env.VITE_API_WATCH_ENDPOINT ||
   'https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click'
 const ENABLE_CLICK_TRACKING = AWS_BRANCH_NAME === 'main'
-const SHOW_DEV_ENV_INFO = !import.meta.env.PROD
+const SHOW_DEV_ENV_INFO = !IS_PROD
 
 function useClickTracker(buttonId, enabled = false) {
   const track = async () => {
@@ -632,7 +632,7 @@ function App() {
             fontSize: '0.9rem',
           }}
         >
-          <div>env.PROD: {String(import.meta.env.PROD)}</div>
+          <div>env.PROD: {String(IS_PROD)}</div>
           <div>API_BASE: {API_BASE}</div>
           <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
           <div>ENABLE_CLICK_TRACKING: {ENABLE_CLICK_TRACKING}</div>

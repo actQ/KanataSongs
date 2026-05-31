@@ -200,7 +200,7 @@ function ShuffleView({
           </div>
 
           {/* iPhoneでの初回再生安定化のため、プレイリスト未生成時もiframeを先にマウントする */}
-          <div className="youtube-player-wrapper">
+          <div className="youtube-player-wrapper preload-player-disabled">
             <YouTubePlayer
               source={{
                 videoId: '',
@@ -217,6 +217,14 @@ function ShuffleView({
               onReachEndPoint={(payload) => onReachEndPoint?.(payload)}
               onFullscreenChange={() => {}}
               onError={(payload) => onPlayerError?.(payload)}
+            />
+
+            <button
+              type="button"
+              className="preload-player-overlay"
+              onClick={generatePlaylist}
+              disabled={shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0}
+              aria-label="再生開始"
             />
           </div>
         </div>

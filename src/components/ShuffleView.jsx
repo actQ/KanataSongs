@@ -192,10 +192,33 @@ function ShuffleView({
       {loading ? (
         <div className="loading">読み込み中...</div>
       ) : playlist.length === 0 ? (
-        <div className="shuffle-empty">
-          {shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0 
-            ? 'フィルタを選択してから「再生開始」を押してください' 
-            : 'フィルタを設定して「再生開始」を押してください'}
+        <div className="shuffle-player-container">
+          <div className="shuffle-empty">
+            {shuffleMovieTypes.size === 0 || shuffleSingerTypes.size === 0
+              ? 'フィルタを選択してから「再生開始」を押してください'
+              : 'フィルタを設定して「再生開始」を押してください'}
+          </div>
+
+          {/* iPhoneでの初回再生安定化のため、プレイリスト未生成時もiframeを先にマウントする */}
+          <div className="youtube-player-wrapper">
+            <YouTubePlayer
+              source={{
+                videoId: '',
+                startSeconds: 0,
+                endSeconds: null,
+                label: 'preload',
+              }}
+              isPlaying={false}
+              volume={undefined}
+              seekRequest={null}
+              onReady={(payload) => onPlayerReady?.(payload)}
+              onStateChange={(payload) => onPlayerStateChange?.(payload)}
+              onTimeUpdate={(payload) => onPlayerTimeUpdate?.(payload)}
+              onReachEndPoint={(payload) => onReachEndPoint?.(payload)}
+              onFullscreenChange={() => {}}
+              onError={(payload) => onPlayerError?.(payload)}
+            />
+          </div>
         </div>
       ) : (
         <div className="shuffle-player-container">

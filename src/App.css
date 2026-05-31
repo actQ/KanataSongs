@@ -287,6 +287,21 @@ header p {
   margin-bottom: 1rem;
 }
 
+.expand-controls-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  min-height: 30px;
+}
+
+.expand-controls-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .expand-btn {
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 999px;
@@ -303,24 +318,34 @@ header p {
 }
 
 .info-icon {
-  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 26px;
   height: 26px;
+  border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   color: #13538f;
   font-size: 0.9rem;
   font-weight: 700;
+  cursor: pointer;
+}
+
+.info-popover {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .info-tooltip {
   position: absolute;
   right: 0;
   bottom: calc(100% + 8px);
-  width: min(370px, calc(100vw - 2rem));
+  width: auto;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 1.2rem));
   background: rgba(255, 255, 255, 0.98);
   color: #32404f;
   border-radius: 12px;
@@ -333,8 +358,8 @@ header p {
   z-index: 20;
 }
 
-.info-icon:hover .info-tooltip,
-.info-icon:active .info-tooltip {
+.info-popover:hover .info-tooltip,
+.info-popover:focus-within .info-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateY(-4px);
@@ -354,6 +379,27 @@ header p {
   margin-bottom: 0.5rem;
   font-size: 0.87rem;
   line-height: 1.5;
+}
+
+.info-tooltip li:last-child {
+  margin-bottom: 0;
+}
+
+.info-tooltip-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.info-tooltip-label {
+  color: #195c96;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.info-tooltip-text {
+  color: #32404f;
+  overflow-wrap: anywhere;
 }
 
 .video-grid {
@@ -1200,6 +1246,15 @@ header p {
     right: -8px;
     bottom: auto;
     top: calc(100% + 8px);
+  }
+
+  .info-popover {
+    top: 0;
+    transform: none;
+  }
+
+  .info-tooltip-list li {
+    gap: 0.15rem;
   }
 }
 

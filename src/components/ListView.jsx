@@ -229,8 +229,8 @@ function ListView({
       </div>
 
       {/* Expand/Collapse All Controls */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+      <div className="expand-controls-wrap">
+        <div className="expand-controls-buttons">
           <button className="expand-btn" onClick={expandAll}>
             すべて展開
           </button>
@@ -238,14 +238,20 @@ function ListView({
             すべて閉じる
           </button>
         </div>
-        
-        {/* Info Tooltip - positioned absolutely to the right */}
-        <div className="info-icon" style={{ marginLeft: '1rem', position: 'absolute', right: 0 }}>?
+
+        <div className="info-popover">
+          <button type="button" className="info-icon" aria-label="このページのリンク説明">?</button>
           <div className="info-tooltip">
             <strong>このページのリンクについて</strong>
-            <ul>
-              <li><strong>サムネイル・動画タイトル:</strong><br />YouTube動画へのリンク</li>
-              <li><strong>曲名:</strong><br />その曲の開始位置へのリンク</li>
+            <ul className="info-tooltip-list">
+              <li>
+                <span className="info-tooltip-label">サムネイル・動画タイトル</span>
+                <span className="info-tooltip-text">YouTube動画へのリンク</span>
+              </li>
+              <li>
+                <span className="info-tooltip-label">曲名</span>
+                <span className="info-tooltip-text">その曲の開始位置へのリンク</span>
+              </li>
             </ul>
           </div>
         </div>

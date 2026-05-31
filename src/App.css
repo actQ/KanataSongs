@@ -1034,6 +1034,28 @@ header p {
   overflow-y: auto;
   max-height: clamp(270px, 52vh, 560px);
   padding-right: 0.2rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(37, 112, 181, 0.55) rgba(16, 67, 116, 0.08);
+}
+
+.playlist::-webkit-scrollbar {
+  width: 10px;
+}
+
+.playlist::-webkit-scrollbar-track {
+  background: rgba(16, 67, 116, 0.08);
+  border-radius: 999px;
+}
+
+.playlist::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background: linear-gradient(180deg, rgba(54, 149, 225, 0.88) 0%, rgba(20, 109, 183, 0.92) 100%);
+}
+
+.playlist::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(72, 165, 239, 0.95) 0%, rgba(32, 124, 201, 0.98) 100%);
 }
 
 .playlist-item {
@@ -1357,6 +1379,22 @@ header p {
 [data-theme='dark'] .playlist-item {
   background: rgba(17, 34, 64, 0.8);
   border-color: rgba(138, 173, 214, 0.2);
+}
+
+[data-theme='dark'] .playlist {
+  scrollbar-color: rgba(140, 185, 232, 0.72) rgba(9, 22, 46, 0.35);
+}
+
+[data-theme='dark'] .playlist::-webkit-scrollbar-track {
+  background: rgba(9, 22, 46, 0.35);
+}
+
+[data-theme='dark'] .playlist::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(139, 188, 237, 0.88) 0%, rgba(87, 146, 206, 0.9) 100%);
+}
+
+[data-theme='dark'] .playlist::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(164, 206, 247, 0.96) 0%, rgba(107, 162, 218, 0.98) 100%);
 }
 
 [data-theme='dark'] .playlist-item.current {

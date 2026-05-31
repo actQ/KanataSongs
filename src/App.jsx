@@ -16,10 +16,7 @@ const API_WATCH_ENDPOINT =
   'https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click'
 const AWS_BRANCH_NAME =
   import.meta.env.VITE_AWS_BRANCH || import.meta.env.AWS_BRANCH || ''
-const ENABLE_CLICK_TRACKING =
-  import.meta.env.PROD &&
-  AWS_BRANCH_NAME === 'main' &&
-  import.meta.env.VITE_ENABLE_CLICK_TRACKING === 'true'
+const ENABLE_CLICK_TRACKING = AWS_BRANCH_NAME === 'main'
 const SHOW_DEV_ENV_INFO = !import.meta.env.PROD
 
 function useClickTracker(buttonId, enabled = false) {
@@ -635,6 +632,7 @@ function App() {
           <div>env.PROD: {String(import.meta.env.PROD)}</div>
           <div>API_BASE: {API_BASE}</div>
           <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
+          <div>ENABLE_CLICK_TRACKING: {ENABLE_CLICK_TRACKING}</div>
         </section>
       )}
 

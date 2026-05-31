@@ -636,7 +636,7 @@ function App() {
           <div>API_BASE: {API_BASE}</div>
           <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
         </section>
-      ) : null}
+      )}
 
       {/* View Mode Selection */}
       <div className="view-mode-selector">

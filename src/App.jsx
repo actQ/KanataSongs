@@ -20,6 +20,7 @@ const ENABLE_CLICK_TRACKING =
   import.meta.env.PROD &&
   AWS_BRANCH_NAME === 'main' &&
   import.meta.env.VITE_ENABLE_CLICK_TRACKING === 'true'
+const SHOW_DEV_ENV_INFO = !import.meta.env.PROD
 
 function useClickTracker(buttonId, enabled = false) {
   const track = async () => {
@@ -617,6 +618,25 @@ function App() {
         <h1>天界学園 音楽資料室💫</h1>
         <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
+
+      {SHOW_DEV_ENV_INFO ? (
+        <section
+          style={{
+            margin: '0 auto 1rem',
+            maxWidth: '900px',
+            background: 'rgba(0,0,0,0.6)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: '8px',
+            padding: '0.75rem 1rem',
+            fontSize: '0.9rem',
+          }}
+        >
+          <div>env.PROD: {String(import.meta.env.PROD)}</div>
+          <div>API_BASE: {API_BASE}</div>
+          <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
+        </section>
+      ) : null}
 
       {/* View Mode Selection */}
       <div className="view-mode-selector">

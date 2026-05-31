@@ -289,44 +289,59 @@ export default function YouTubePlayer({
         duration: total,
       })
 
-      if (
-        Date.now() >= sourceSwitchGuardUntilRef.current &&
-        playerState === 1 &&
-        typeof currentSource.endSeconds === 'number' &&
-        !endEventSentRef.current &&
-        time >= currentSource.endSeconds - ENDPOINT_EPSILON_SECONDS
-      ) {
-        endEventSentRef.current = true
-        callbacksRef.current.onReachEndPoint({
-          videoId: currentSource.videoId,
-          currentTime: time,
-          endSeconds: currentSource.endSeconds,
-          reason: 'segment-end',
-          shouldAutoAdvance: true,
-        })
+      const hasApiEndSeconds = typeof currentSource.endSeconds === 'number'
+      const apiEndSeconds = hasApiEndSeconds
+        ? toSeconds(currentSource.endSeconds)
+        : null
+      const hasKnownDuration = Number.isFinite(total) && total > 0
+      const isActualDurationShorterThanApi =
+        hasApiEndSeconds &&
+        hasKnownDuration &&
+        total + ENDPOINT_EPSILON_SECONDS < apiEndSeconds
+
+      const shouldUseIPhoneSoftEnd =
+        isIPhoneRef.current &&
+        hasKnownDuration &&
+        (!hasApiEndSeconds || isActualDurationShorterThanApi)
+
+      let effectiveEndSeconds = null
+      if (hasApiEndSeconds) {
+        effectiveEndSeconds = isActualDurationShorterThanApi ? total : apiEndSeconds
+      } else if (shouldUseIPhoneSoftEnd) {
+        effectiveEndSeconds = total
       }
+
+      const endpointPaddingSeconds = shouldUseIPhoneSoftEnd
+        ? IOS_SOFT_VIDEO_END_PADDING_SECONDS
+        : ENDPOINT_EPSILON_SECONDS
+
+      const shouldEmitEndByTime =
+        effectiveEndSeconds !== null &&
+        effectiveEndSeconds > endpointPaddingSeconds &&
+        time >= effectiveEndSeconds - endpointPaddingSeconds
 
       if (
         Date.now() >= sourceSwitchGuardUntilRef.current &&
         playerState === 1 &&
-        typeof currentSource.endSeconds !== 'number' &&
         !endEventSentRef.current &&
-        isIPhoneRef.current &&
-        total > IOS_SOFT_VIDEO_END_PADDING_SECONDS &&
-        time >= total - IOS_SOFT_VIDEO_END_PADDING_SECONDS
+        shouldEmitEndByTime
       ) {
         endEventSentRef.current = true
         callbacksRef.current.onReachEndPoint({
           videoId: currentSource.videoId,
           currentTime: time,
-          endSeconds: total,
-          reason: 'ios-soft-video-end',
+          endSeconds: effectiveEndSeconds,
+          reason: isActualDurationShorterThanApi
+            ? 'segment-end-adjusted-by-duration'
+            : shouldUseIPhoneSoftEnd
+              ? 'ios-soft-video-end'
+              : 'segment-end',
           shouldAutoAdvance: true,
         })
 
         // iPhone native fullscreen exits when the player reaches true "ended".
         // Pause slightly before the physical end to keep fullscreen from closing.
-        if (typeof player.pauseVideo === 'function') {
+        if (shouldUseIPhoneSoftEnd && typeof player.pauseVideo === 'function') {
           player.pauseVideo()
         }
       }

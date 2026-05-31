@@ -619,7 +619,7 @@ function App() {
         <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
 
-      {SHOW_DEV_ENV_INFO ? (
+      {(
         <section
           style={{
             margin: '0 auto 1rem',

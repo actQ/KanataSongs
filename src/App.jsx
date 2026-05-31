@@ -19,7 +19,7 @@ const API_BASE =
 const API_WATCH_ENDPOINT =
   import.meta.env.VITE_API_WATCH_ENDPOINT ||
   'https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click'
-const ENABLE_CLICK_TRACKING = AWS_BRANCH_NAME === 'main'
+const ENABLE_CLICK_TRACKING = IS_PROD
 const SHOW_DEV_ENV_INFO = !IS_PROD
 
 function useClickTracker(buttonId, enabled = false) {
@@ -619,7 +619,7 @@ function App() {
         <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
 
-      {(
+      {SHOW_DEV_ENV_INFO ? (
         <section
           style={{
             margin: '0 auto 1rem',
@@ -635,9 +635,9 @@ function App() {
           <div>env.PROD: {String(IS_PROD)}</div>
           <div>API_BASE: {API_BASE}</div>
           <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
-          <div>ENABLE_CLICK_TRACKING: {ENABLE_CLICK_TRACKING}</div>
+          <div>ENABLE_CLICK_TRACKING: {String(ENABLE_CLICK_TRACKING)}</div>
         </section>
-      )}
+      ):null}
 
       {/* View Mode Selection */}
       <div className="view-mode-selector">

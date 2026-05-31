@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { loadYouTubeIframeApi } from '../utils/youtube'
 
 const ENDPOINT_EPSILON_SECONDS = 0.2
+const IOS_SOFT_VIDEO_END_PADDING_SECONDS = 0.35
 
 function buildSourceKey(source) {
   return [
@@ -39,6 +40,14 @@ function toOptionalVolume(value) {
   return Math.max(0, Math.min(100, numeric))
 }
 
+function isIPhoneDevice() {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+  const ua = navigator.userAgent || ''
+  return /iPhone|iPod/i.test(ua)
+}
+
 export default function YouTubePlayer({
   source,
   isPlaying,
@@ -63,6 +72,7 @@ export default function YouTubePlayer({
   const pendingResumeAfterSwitchRef = useRef(false)
   const resumeAttemptsLeftRef = useRef(0)
   const resumeTimerRef = useRef(null)
+  const isIPhoneRef = useRef(isIPhoneDevice())
   const isPlayingRef = useRef(isPlaying)
   const sourceRef = useRef(source)
   const callbacksRef = useRef({
@@ -75,6 +85,7 @@ export default function YouTubePlayer({
   })
 
   useEffect(() => {
+    isIPhoneRef.current = isIPhoneDevice()
     sourceRef.current = source
   }, [source])
 
@@ -293,6 +304,31 @@ export default function YouTubePlayer({
           reason: 'segment-end',
           shouldAutoAdvance: true,
         })
+      }
+
+      if (
+        Date.now() >= sourceSwitchGuardUntilRef.current &&
+        playerState === 1 &&
+        typeof currentSource.endSeconds !== 'number' &&
+        !endEventSentRef.current &&
+        isIPhoneRef.current &&
+        total > IOS_SOFT_VIDEO_END_PADDING_SECONDS &&
+        time >= total - IOS_SOFT_VIDEO_END_PADDING_SECONDS
+      ) {
+        endEventSentRef.current = true
+        callbacksRef.current.onReachEndPoint({
+          videoId: currentSource.videoId,
+          currentTime: time,
+          endSeconds: total,
+          reason: 'ios-soft-video-end',
+          shouldAutoAdvance: true,
+        })
+
+        // iPhone native fullscreen exits when the player reaches true "ended".
+        // Pause slightly before the physical end to keep fullscreen from closing.
+        if (typeof player.pauseVideo === 'function') {
+          player.pauseVideo()
+        }
       }
     }, 100)
 

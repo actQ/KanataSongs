@@ -365,7 +365,9 @@ header p {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.youtube-player-wrapper iframe {
+.youtube-player-wrapper iframe,
+.youtube-player-wrapper .player-shell,
+.youtube-player-wrapper .player-host {
   position: absolute;
   top: 0;
   left: 0;

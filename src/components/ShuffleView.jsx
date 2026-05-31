@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import YouTube from 'react-youtube'
+import YouTubePlayer from './YouTubePlayer'
 
 function TickerText({ as: Component = 'div', children, className = '', gap = 32 }) {
   const containerRef = useRef(null)
@@ -93,6 +93,11 @@ function ShuffleView({
   togglePlayPause,
   onPlayerReady,
   onPlayerStateChange,
+  onPlayerTimeUpdate,
+  onReachEndPoint,
+  onPlayerError,
+  issueSeek,
+  seekRequest,
   formatTime,
   getSongDuration,
   getSongProgress,
@@ -109,12 +114,7 @@ function ShuffleView({
     
     if (duration > 0) {
       const newTime = playlist[currentIndex].start + (percent * duration)
-      
-      // playerRef経由でシーク
-      if (window.__shuffleViewPlayerRef?.current?.seekTo) {
-        // console.log(`🎯 [Seekbar click] Seeking to ${newTime}s`)
-        window.__shuffleViewPlayerRef.current.seekTo(newTime, true)
-      }
+      issueSeek('absolute', newTime)
     }
   }
   return (
@@ -232,21 +232,22 @@ function ShuffleView({
 
           {/* YouTubeプレーヤー */}
           <div className="youtube-player-wrapper">
-            <YouTube
-              videoId={playlist[currentIndex].video_id}
-              opts={{
-                width: '100%',
-                height: '100%',
-                playerVars: {
-                  autoplay: 1,
-                  controls: 1,
-                  rel: 0,
-                  start: playlist[currentIndex].start,
-                  origin: window.location.origin,
-                },
+            <YouTubePlayer
+              source={{
+                videoId: playlist[currentIndex].video_id,
+                startSeconds: playlist[currentIndex].start || 0,
+                endSeconds: playlist[currentIndex].end || null,
+                label: playlist[currentIndex].title,
               }}
-              onReady={(e) => onPlayerReady?.(e)}
-              onStateChange={(e) => onPlayerStateChange?.(e)}
+              isPlaying={isPlaying}
+              volume={undefined}
+              seekRequest={seekRequest}
+              onReady={(payload) => onPlayerReady?.(payload)}
+              onStateChange={(payload) => onPlayerStateChange?.(payload)}
+              onTimeUpdate={(payload) => onPlayerTimeUpdate?.(payload)}
+              onReachEndPoint={(payload) => onReachEndPoint?.(payload)}
+              onFullscreenChange={() => {}}
+              onError={(payload) => onPlayerError?.(payload)}
             />
           </div>
 

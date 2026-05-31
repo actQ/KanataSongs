@@ -21,6 +21,7 @@ const API_WATCH_ENDPOINT =
   'https://cuk62hvw2l.execute-api.ap-northeast-1.amazonaws.com/api/watch/click'
 const ENABLE_CLICK_TRACKING = IS_PROD
 const SHOW_DEV_ENV_INFO = !IS_PROD
+const THEME_MODE_STORAGE_KEY = 'kanata-theme-mode'
 
 function useClickTracker(buttonId, enabled = false) {
   const track = async () => {
@@ -64,8 +65,23 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [seekRequest, setSeekRequest] = useState(null)
   const [requestId, setRequestId] = useState(0)
+  const [showDevEnvPanel, setShowDevEnvPanel] = useState(SHOW_DEV_ENV_INFO)
+  const [themeMode, setThemeMode] = useState(() => {
+    if (typeof window === 'undefined') return 'system'
+    const saved = window.localStorage.getItem(THEME_MODE_STORAGE_KEY)
+    return saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system'
+  })
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
   const lastNextCallRef = useRef(0)
   const NEXT_THROTTLE_MS = 800 // 次曲送りの短期多重呼び出しを抑制
+  const resolvedTheme = themeMode === 'system'
+    ? (systemPrefersDark ? 'dark' : 'light')
+    : themeMode
 
   const reshuffleBtnTracker = useClickTracker("reshuffle-btn", ENABLE_CLICK_TRACKING);
 
@@ -470,13 +486,13 @@ function App() {
     return Math.max(0, Math.min(100, (elapsed / duration) * 100))
   }
 
-  // 表示するプレイリスト（前5曲、現在、次5曲）
+  // 表示するプレイリスト（前10曲、現在、次10曲）
   const getVisiblePlaylist = () => {
     if (playlist.length === 0) return []
     
     const visible = []
-    const startIdx = Math.max(0, currentIndex - 5)
-    const endIdx = Math.min(playlist.length - 1, currentIndex + 5)
+    const startIdx = Math.max(0, currentIndex - 10)
+    const endIdx = Math.min(playlist.length - 1, currentIndex + 10)
     
     if (startIdx > 0) {
       visible.push({ type: 'separator', globalIndex: -1 })
@@ -558,6 +574,37 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (event) => setSystemPrefersDark(event.matches)
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', handleChange)
+      return () => media.removeEventListener('change', handleChange)
+    }
+
+    media.addListener(handleChange)
+    return () => media.removeListener(handleChange)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    window.localStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode)
+  }, [themeMode])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+    document.documentElement.setAttribute('data-theme', resolvedTheme)
+  }, [resolvedTheme])
+
+  useEffect(() => {
     // viewModeがlistに変わった場合は常にハッシュを更新
     if (viewMode === 'list') {
       if (window.location.hash !== '#/list') {
@@ -601,25 +648,71 @@ function App() {
   // グラデーション設定を動的に変更
   useEffect(() => {
     const cardCount = filteredVideos.length
+    const C1 = '#9BCBDF'
+    const C2 = '#0B01DF'
+    const C3 = '#060519'
+    const C2_DARK_START = '#05008E'
+
     let gradient
-    if (cardCount < 6) {
-      // 6:2:2 - ライトブルーを少し多めに
-      gradient = 'linear-gradient(180deg, #9BCBDF 0%, #9BCBDF 60%, #0B01DF 80%, #060519 100%)'
+    if (resolvedTheme === 'dark') {
+      gradient = `linear-gradient(180deg, ${C2_DARK_START} 0%, ${C2_DARK_START} 14%, ${C3} 46%, ${C3} 100%)`
+    } else if (cardCount < 6) {
+      gradient = `linear-gradient(180deg, ${C1} 0%, ${C1} 60%, ${C2} 80%, ${C3} 100%)`
     } else {
-      // 1:4:3 - 通常のグラデーション
-      gradient = 'linear-gradient(180deg, #9BCBDF 0%, #9BCBDF 25%, #0B01DF 65%, #060519 100%)'
+      gradient = `linear-gradient(180deg, ${C1} 0%, ${C1} 25%, ${C2} 65%, ${C3} 100%)`
     }
+
     document.body.style.background = gradient
-  }, [filteredVideos])
+  }, [filteredVideos, resolvedTheme])
 
   return (
     <div className="container">
       <header>
+        <div className="theme-selector">
+          <label htmlFor="theme-mode-select">テーマ</label>
+          <select
+            id="theme-mode-select"
+            value={themeMode}
+            onChange={(e) => setThemeMode(e.target.value)}
+          >
+            <option value="system">システム設定に従う</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </div>
         <h1>天界学園 音楽資料室💫</h1>
         <p>ホロライブ4期生 天音かなたの3Dライブ・歌枠・MVまとめ</p>
       </header>
 
       {SHOW_DEV_ENV_INFO ? (
+        <div
+          style={{
+            position: 'fixed',
+            left: '0.75rem',
+            top: '0.75rem',
+            zIndex: 1000,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowDevEnvPanel((prev) => !prev)}
+            style={{
+              border: '1px solid rgba(255,255,255,0.5)',
+              borderRadius: '999px',
+              background: 'rgba(0,0,0,0.35)',
+              color: '#fff',
+              padding: '0.35rem 0.72rem',
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            {showDevEnvPanel ? 'デバッグ情報を隠す' : 'デバッグ情報を表示'}
+          </button>
+        </div>
+      ) : null}
+
+      {SHOW_DEV_ENV_INFO && showDevEnvPanel ? (
         <section
           style={{
             margin: '0 auto 1rem',
@@ -637,7 +730,7 @@ function App() {
           <div>AWS_BRANCH_NAME: {AWS_BRANCH_NAME || '(empty)'}</div>
           <div>ENABLE_CLICK_TRACKING: {String(ENABLE_CLICK_TRACKING)}</div>
         </section>
-      ):null}
+      ) : null}
 
       {/* View Mode Selection */}
       <div className="view-mode-selector">
